@@ -84,7 +84,7 @@ def detect_project_root(pyfile: Path):
 SCRIPT_DIR = Path(__file__).parent if "__file__" in globals() else Path(".")
 PROJECT_ROOT = detect_project_root(Path(__file__))
 DATASET_DIR_DEFAULT = PROJECT_ROOT / "MBA-CD/data"
-OUTDIR_DEFAULT = SCRIPT_DIR / "MBA-CD/resultados"
+OUTDIR_DEFAULT = SCRIPT_DIR / "resultados"
 
 # =========================
 # Utilidades de saída e métricas
@@ -861,96 +861,134 @@ def xai_deep_kernel(model, X_train_z, X_test_z, feature_names, outdir: Path, tag
 def run_full_grid(X_tab, X_seq, y, feature_names, outdir: Path,
                   use_smote: bool, epochs: int, batch: int,
                   feat_mode: str, global_outdir: Path):
+
     reg = build_model_registry()
     results = []
 
-    # split único 70/30 (igual para todos)
-    idx_train, idx_test, y_train, y_test = train_test_split(
-        np.arange(len(y)), y.values, test_size=0.30, stratify=y.values, random_state=SEED_SPLIT
-    )
-    X_train_tab = X_tab.iloc[idx_train].reset_index(drop=True)
-    X_test_tab  = X_tab.iloc[idx_test].reset_index(drop=True)
-    X_train_seq = X_seq[idx_train]
-    X_test_seq  = X_seq[idx_test]
-
     feat_tag = f"FEAT-{feat_mode.upper()}"
+
+    # 10-fold cross validation (estratificado)
+    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=SEED_CV)
 
     for name, spec in reg.items():
         engine = spec["engine"]
-        print(f"\n=== [{feat_tag}] Rodando modelo: {name}  [engine={engine}] ===", flush=True)
+        print(f"\n=== [{feat_tag}] Rodando modelo: {name}  [engine={engine}] (10-fold CV) ===", flush=True)
 
-        if engine == "sklearn":
-            base_model  = spec["model"]
-            param_grid  = spec["param_grid"]
+        fold_idx = 0
+        for train_index, test_index in skf.split(X_tab, y):
+            fold_idx += 1
+            print(f"  >> Fold {fold_idx}/10", flush=True)
 
-            # SMOTE só para tabular
-            pipe_cls = ImbPipeline if use_smote else Pipeline
-            steps = [("scaler", StandardScaler())]
-            if use_smote:
-                steps.append(("smote", SMOTE(random_state=SEED_SPLIT)))
-            steps.append(("model", base_model))
-            pipe = pipe_cls(steps=steps)
+            X_train_tab, X_test_tab = X_tab.iloc[train_index], X_tab.iloc[test_index]
+            y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-            cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=SEED_CV)
-            grid = GridSearchCV(estimator=pipe, param_grid=param_grid,
-                                scoring='recall', cv=cv, refit=True, n_jobs=-1, verbose=0)
-            grid.fit(X_train_tab, y_train)
+            if engine == "sklearn":
+                base_model  = spec["model"]
+                param_grid  = spec["param_grid"]
 
-            # Única variante: melhor da grade (grid_best)
-            fitted = grid.best_estimator_
-            scaler_fitted = fitted.named_steps["scaler"]
-            Xte_np = scaler_fitted.transform(X_test_tab)
-            model_fitted = fitted.named_steps["model"]
-            y_prob = (model_fitted.predict_proba(Xte_np)[:,1]
-                      if hasattr(model_fitted, "predict_proba")
-                      else model_fitted.decision_function(Xte_np))
-            y_prob = np.clip(np.nan_to_num(y_prob, nan=0.5, posinf=1.0, neginf=0.0), 0.0, 1.0)
-            rep = eval_report(y_test, y_prob, thr=0.5)
+                # SMOTE só para tabular
+                pipe_cls = ImbPipeline if use_smote else Pipeline
+                steps = [("scaler", StandardScaler())]
+                if use_smote:
+                    steps.append(("smote", SMOTE(random_state=SEED_SPLIT)))
+                steps.append(("model", base_model))
+                pipe = pipe_cls(steps=steps)
 
-            row = dict(
-                feat_mode=feat_mode,
-                scenario=("SMOTE" if use_smote else "Original"),
-                model=name, variant="grid_best",
-                accuracy=rep["accuracy"], precision=rep["precision"],
-                recall=rep["recall"], f1=rep["f1"], auc=rep["auc"]
-            )
-            results.append(row)
-            prefix = f"{feat_tag}_{'SMOTE' if use_smote else 'ORIGINAL'}_{name}_grid_best"
-            save_confusion_matrix(rep["confusion_matrix"], ["0","1"], f"{prefix} - CM", outdir / f"{prefix}_CM.png")
-            save_roc_curve(y_test, y_prob, f"{prefix} - ROC", outdir / f"{prefix}_ROC.png")
-            xai_tabular(fitted, X_train_tab, X_test_tab, feature_names, outdir, tag_prefix=prefix, model_name=name)
-            append_result_row(outdir, row, also_write_to=[global_outdir])
-            print(pd.DataFrame([row]), flush=True)
+                # GridSearch interno (avaliado apenas no treino do fold)
+                grid = GridSearchCV(estimator=pipe, param_grid=param_grid,
+                                    scoring="recall", cv=3, n_jobs=-1, refit=True, verbose=0)
+                grid.fit(X_train_tab, y_train)
 
-        elif engine == "keras_seq":
-            # (mantido para referência — atualmente não há modelos seq ativos)
-            X_train_seq_z, X_test_seq_z = standardize_sequence(X_train_seq, X_test_seq)
-            input_shape = (X_train_seq_z.shape[1], X_train_seq_z.shape[2])
-            model = spec["builder"](input_shape)
-            es = callbacks.EarlyStopping(patience=3, restore_best_weights=True, monitor="val_loss")
-            model.compile(optimizer=optimizers.Adam(1e-3),
-                          loss=losses.BinaryCrossentropy(), run_eagerly=True)
-            model.fit(X_train_seq_z, y_train,
-                      validation_split=0.20, epochs=epochs, batch_size=batch,
-                      verbose=0, callbacks=[es])
-            y_prob = model.predict(X_test_seq_z, batch_size=batch, verbose=0).ravel()
-            y_prob = np.clip(np.nan_to_num(y_prob, nan=0.5, posinf=1.0, neginf=0.0), 0.0, 1.0)
-            rep = eval_report(y_test, y_prob, thr=0.5)
-            row = dict(
-                feat_mode=feat_mode,
-                scenario="SEQUENCE", model=name, variant="grid_best",
-                accuracy=rep["accuracy"], precision=rep["precision"],
-                recall=rep["recall"], f1=rep["f1"], auc=rep["auc"]
-            )
-            results.append(row)
-            prefix = f"{feat_tag}_DEEP_{name}"
-            save_confusion_matrix(rep["confusion_matrix"], ["0","1"], f"{prefix} - CM", outdir / f"{prefix}_CM.png")
-            save_roc_curve(y_test, y_prob, f"{prefix} - ROC", outdir / f"{prefix}_ROC.png")
-            xai_deep_kernel(model, X_train_seq_z, X_test_seq_z, DEFAULT_VARS, outdir, tag_prefix=prefix)
-            append_result_row(outdir, row, also_write_to=[global_outdir])
-            print(pd.DataFrame([row]), flush=True)
+                fitted = grid.best_estimator_
+                scaler_fitted = fitted.named_steps["scaler"]
+                Xte_np = scaler_fitted.transform(X_test_tab)
+                model_fitted = fitted.named_steps["model"]
+                y_prob = (model_fitted.predict_proba(Xte_np)[:,1]
+                          if hasattr(model_fitted, "predict_proba")
+                          else model_fitted.decision_function(Xte_np))
+                y_prob = np.clip(np.nan_to_num(y_prob, nan=0.5, posinf=1.0, neginf=0.0), 0.0, 1.0)
+                rep = eval_report(y_test, y_prob, thr=0.5)
 
-    return pd.DataFrame(results).sort_values(["feat_mode","scenario","model","variant"])
+                row = dict(
+                    feat_mode=feat_mode,
+                    scenario=("SMOTE" if use_smote else "Original"),
+                    model=name, variant=f"grid_best_fold{fold_idx}",
+                    accuracy=rep["accuracy"], precision=rep["precision"],
+                    recall=rep["recall"], f1=rep["f1"], auc=rep["auc"]
+                )
+                results.append(row)
+
+                prefix = f"{feat_tag}_{'SMOTE' if use_smote else 'ORIGINAL'}_{name}_fold{fold_idx}"
+                save_confusion_matrix(rep["confusion_matrix"], ["0","1"], f"{prefix} - CM", outdir / f"{prefix}_CM.png")
+                save_roc_curve(y_test, y_prob, f"{prefix} - ROC", outdir / f"{prefix}_ROC.png")
+
+                # explicabilidade apenas no 1º fold para economizar tempo
+                if fold_idx == 1:
+                    xai_tabular(fitted, X_train_tab, X_test_tab, feature_names, outdir,
+                                tag_prefix=prefix, model_name=name)
+
+                append_result_row(outdir, row, also_write_to=[global_outdir])
+                print(pd.DataFrame([row]), flush=True)
+
+            elif engine == "keras_seq":
+                # (mantido apenas como referência)
+                X_train_seq, X_test_seq = X_seq[train_index], X_seq[test_index]
+                X_train_seq_z, X_test_seq_z = standardize_sequence(X_train_seq, X_test_seq)
+                input_shape = (X_train_seq_z.shape[1], X_train_seq_z.shape[2])
+                model = spec["builder"](input_shape)
+                es = callbacks.EarlyStopping(patience=3, restore_best_weights=True, monitor="val_loss")
+                model.compile(optimizer=optimizers.Adam(1e-3),
+                              loss=losses.BinaryCrossentropy(), run_eagerly=True)
+                model.fit(X_train_seq_z, y_train,
+                          validation_split=0.20, epochs=epochs, batch_size=batch,
+                          verbose=0, callbacks=[es])
+                y_prob = model.predict(X_test_seq_z, batch_size=batch, verbose=0).ravel()
+                y_prob = np.clip(np.nan_to_num(y_prob, nan=0.5, posinf=1.0, neginf=0.0), 0.0, 1.0)
+                rep = eval_report(y_test, y_prob, thr=0.5)
+
+                row = dict(
+                    feat_mode=feat_mode,
+                    scenario="SEQUENCE", model=name, variant=f"grid_best_fold{fold_idx}",
+                    accuracy=rep["accuracy"], precision=rep["precision"],
+                    recall=rep["recall"], f1=rep["f1"], auc=rep["auc"]
+                )
+                results.append(row)
+
+                prefix = f"{feat_tag}_DEEP_{name}_fold{fold_idx}"
+                save_confusion_matrix(rep["confusion_matrix"], ["0","1"], f"{prefix} - CM", outdir / f"{prefix}_CM.png")
+                save_roc_curve(y_test, y_prob, f"{prefix} - ROC", outdir / f"{prefix}_ROC.png")
+
+                if fold_idx == 1:
+                    xai_deep_kernel(model, X_train_seq_z, X_test_seq_z,
+                                    DEFAULT_VARS, outdir, tag_prefix=prefix)
+
+                append_result_row(outdir, row, also_write_to=[global_outdir])
+                print(pd.DataFrame([row]), flush=True)
+
+    # ----- resumo final (média ± std por algoritmo) -----
+    df_results = pd.DataFrame(results)
+    df_summary = df_results.groupby(
+        ["feat_mode", "scenario", "model"]
+    ).agg(
+        accuracy_mean=("accuracy", "mean"), accuracy_std=("accuracy", "std"),
+        precision_mean=("precision", "mean"), precision_std=("precision", "std"),
+        recall_mean=("recall", "mean"), recall_std=("recall", "std"),
+        f1_mean=("f1", "mean"), f1_std=("f1", "std"),
+        auc_mean=("auc", "mean"), auc_std=("auc", "std"),
+    ).reset_index()
+
+    # salvar resumo
+    df_summary.to_csv(outdir / f"{feat_tag}_summary.tsv", sep="\t", index=False, float_format="%.5f")
+    df_summary.to_json(outdir / f"{feat_tag}_summary.json", orient="records", indent=2)
+    df_summary.to_csv(global_outdir / f"{feat_tag}_summary.tsv", sep="\t", index=False, float_format="%.5f")
+    df_summary.to_json(global_outdir / f"{feat_tag}_summary.json", orient="records", indent=2)
+
+    print(f"\n=== Resumo final {feat_tag} ===", flush=True)
+    print(df_summary, flush=True)
+
+    return df_results.sort_values(["feat_mode","scenario","model","variant"])
+
+
 
 # =========================
 # CLI e MAIN
