@@ -37097,17 +37097,17 @@
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
             var pp_svg = pp_div.append('svg').style('width', '100%');
-            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.36449208334838284, 0.635507916651617]);
+            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.31666666666666665, 0.6833333333333333]);
             
         
         var exp_div;
             var exp = new lime.Explanation(["normal", "evento"]);
         
                 exp_div = top_div.append('div').classed('lime explanation', true);
-                exp.show([["P-TPT_last > 0.64", -0.08963605650937576], ["T-JUS-CKP_last <= -0.64", 0.07772411547769521], ["T-TPT_last <= -0.54", 0.04752660156540642], ["0.46 < P-PDG_last <= 0.47", 0.023474919732119844], ["QGL_last <= -0.06", 0.01923263678211831], ["P-MON-CKP_last > -0.12", -0.01086444660362781], ["P-JUS-CKGL_last <= -0.16", 0.0039701731043191805], ["T-JUS-CKGL_last <= 0.00", 0.0]], 1, exp_div);
+                exp.show([["P-TPT_last > 0.64", -0.09493078183960504], ["T-JUS-CKP_last <= -0.64", 0.06675775962840033], ["T-TPT_last <= -0.54", 0.04872421572843137], ["P-MON-CKP_last > -0.12", -0.018882997909288986], ["QGL_last <= -0.06", 0.01471777874419747], ["0.46 < P-PDG_last <= 0.47", 0.0018242805260312014], ["P-JUS-CKGL_last <= -0.16", -0.000695182765874554], ["T-JUS-CKGL_last <= 0.00", 0.0]], 1, exp_div);
                 
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["P-TPT_last", "0.88", -0.08963605650937576], ["T-JUS-CKP_last", "-0.87", 0.07772411547769521], ["T-TPT_last", "-0.54", 0.04752660156540642], ["P-PDG_last", "0.47", 0.023474919732119844], ["QGL_last", "-0.06", 0.01923263678211831], ["P-MON-CKP_last", "2.33", -0.01086444660362781], ["P-JUS-CKGL_last", "-0.16", 0.0039701731043191805], ["T-JUS-CKGL_last", "0.00", 0.0]], 1, raw_div);
+            exp.show_raw_tabular([["P-TPT_last", "0.88", -0.09493078183960504], ["T-JUS-CKP_last", "-0.87", 0.06675775962840033], ["T-TPT_last", "-0.54", 0.04872421572843137], ["P-MON-CKP_last", "2.33", -0.018882997909288986], ["QGL_last", "-0.06", 0.01471777874419747], ["P-PDG_last", "0.47", 0.0018242805260312014], ["P-JUS-CKGL_last", "-0.16", -0.000695182765874554], ["T-JUS-CKGL_last", "0.00", 0.0]], 1, raw_div);
         
         </script>
         </body></html>

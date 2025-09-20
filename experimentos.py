@@ -896,7 +896,8 @@ def run_full_grid(X_tab, X_seq, y, feature_names, outdir: Path,
 
                 # GridSearch interno (avaliado apenas no treino do fold)
                 grid = GridSearchCV(estimator=pipe, param_grid=param_grid,
-                                    scoring="recall", cv=3, n_jobs=-1, refit=True, verbose=0)
+                                    #scoring="recall", cv=5, n_jobs=-1, refit=True, verbose=0)
+                                    scoring="f1", cv=5, refit=True, verbose=0)
                 grid.fit(X_train_tab, y_train)
 
                 fitted = grid.best_estimator_
