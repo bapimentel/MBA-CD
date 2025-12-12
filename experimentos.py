@@ -74,6 +74,10 @@ DEFAULT_VARS = ["P-PDG","P-TPT","T-TPT","P-MON-CKP","T-JUS-CKP","P-JUS-CKGL","T-
 N_BG_SHAP   = 1000   # background máximo
 N_TEST_SHAP = 200    # amostras no plot
 
+# ====== (VISUAL) ajustes de plots SHAP ======
+MAX_SHAP_FEATURES_PLOT = 10   # em FEAT_ORIG isso fica <= 8; nos modos grandes limita para não explodir
+SHAP_PAD_INCHES = 0.50         # padding extra para não cortar labels
+
 # =========================
 # Paths
 # =========================
@@ -700,7 +704,6 @@ def build_model_registry():
             "engine": "sklearn",
             "model": GaussianNB(),
             "param_grid": {  # sem muitos hiperparâmetros
-                # 'var_smoothing' ajuda estabilidade numérica
                 "model__var_smoothing": [1e-9, 1e-8, 1e-7]
             },
         },
@@ -714,19 +717,6 @@ def build_model_registry():
                 "model__l2_regularization": [0.0, 1.0],
             },
         },
-
-        # Exemplos de deep e LightGBM (descomentando ativa):
-        # "LGBM": {
-        #     "engine": "sklearn",
-        #     "model": lgb.LGBMClassifier(objective="binary", random_state=SEED_MODELS),
-        #     "param_grid": {
-        #         "model__num_leaves": [31, 63],
-        #         "model__n_estimators": [100, 300],
-        #         "model__learning_rate": [0.05, 0.1],
-        #     },
-        # },
-        # "LSTM": { ... },
-        # "TRANSFORMER": { ... },
     }
     return reg
 
@@ -740,15 +730,55 @@ def xai_tabular(pipe, X_train, X_test, feature_names, outdir: Path, tag_prefix: 
     X_train_t = scaler.transform(X_train)
     X_test_t  = scaler.transform(X_test)
 
+    feature_names = list(feature_names)
+
+    # ====== (VISUAL) helpers ======
+    def _coerce_shap_to_2d(sv, n_features):
+        # garante (n_samples, n_features) para o summary_plot
+        if isinstance(sv, list):
+            sv = sv[1] if len(sv) >= 2 else sv[0]
+        sv = np.asarray(sv)
+
+        # Se vier "interaction-like" (n, f, f), pega só diagonal (efeitos principais)
+        if sv.ndim == 3 and sv.shape[1] == sv.shape[2] == n_features:
+            sv = np.diagonal(sv, axis1=1, axis2=2)
+
+        # Se vier multioutput (n, f, out), pega out=1 se existir, senão out=0
+        elif sv.ndim == 3 and sv.shape[1] == n_features and sv.shape[2] >= 1:
+            sv = sv[:, :, 1] if sv.shape[2] >= 2 else sv[:, :, 0]
+
+        return sv
+
+    def _fix_xlabel(ax, fallback="SHAP value"):
+        lab = ax.get_xlabel() or ""
+        if "interaction" in lab.lower():
+            ax.set_xlabel(fallback)
+        ax.xaxis.label.set_clip_on(False)
+
+    def _save_fig(path: Path, figsize=(11.5, 6.2), left=0.42, bottom=0.18):
+        fig = plt.gcf()
+        fig.set_size_inches(*figsize)
+        fig.subplots_adjust(left=left, right=0.98, top=0.98, bottom=bottom)
+        fig.savefig(path, dpi=180, bbox_inches="tight", pad_inches=SHAP_PAD_INCHES)
+        plt.close(fig)
+
     def plot_shap(sv, X_df, suffix=""):
-        plt.figure(figsize=(7.5,5.5))
-        shap.summary_plot(sv, features=X_df, show=False)
-        plt.savefig(outdir / f"{tag_prefix}_{model_name}_SHAP_beeswarm{suffix}.png", dpi=160, bbox_inches="tight")
-        plt.close()
-        plt.figure(figsize=(7.0,5.0))
-        shap.summary_plot(sv, features=X_df, plot_type="bar", show=False)
-        plt.savefig(outdir / f"{tag_prefix}_{model_name}_SHAP_bar{suffix}.png", dpi=160, bbox_inches="tight")
-        plt.close()
+        k = min(len(feature_names), MAX_SHAP_FEATURES_PLOT)
+
+        # beeswarm
+        shap.summary_plot(sv, features=X_df, show=False, max_display=k)
+        ax = plt.gca()
+        _fix_xlabel(ax, fallback="SHAP value")
+        _save_fig(outdir / f"{tag_prefix}_{model_name}_SHAP_beeswarm{suffix}.png",
+                  figsize=(11.8, 6.4), left=0.42, bottom=0.20)
+
+        # bar
+        shap.summary_plot(sv, features=X_df, plot_type="bar", show=False, max_display=k)
+        ax = plt.gca()
+        # só troca se vier como interaction; caso contrário mantém o label padrão do bar
+        _fix_xlabel(ax, fallback="mean(|SHAP value|)")
+        _save_fig(outdir / f"{tag_prefix}_{model_name}_SHAP_bar{suffix}.png",
+                  figsize=(11.8, 6.4), left=0.44, bottom=0.20)
 
     try:
         # Modelos de árvore suportados diretamente pelo TreeExplainer
@@ -756,13 +786,14 @@ def xai_tabular(pipe, X_train, X_test, feature_names, outdir: Path, tag_prefix: 
         if isinstance(model, tree_like):
             explainer = shap.TreeExplainer(model)
             sv = explainer.shap_values(X_test_t)
-            if isinstance(sv, list) and len(sv)==2: sv = sv[1]
+            sv = _coerce_shap_to_2d(sv, n_features=len(feature_names))
             X_plot_df = pd.DataFrame(X_test_t, columns=list(feature_names))
             plot_shap(sv, X_plot_df)
 
         elif isinstance(model, LogisticRegression):
             explainer = shap.LinearExplainer(model, X_train_t)
             sv = explainer.shap_values(X_test_t)
+            sv = _coerce_shap_to_2d(sv, n_features=len(feature_names))
             X_plot_df = pd.DataFrame(X_test_t, columns=list(feature_names))
             plot_shap(sv, X_plot_df)
 
@@ -775,10 +806,14 @@ def xai_tabular(pipe, X_train, X_test, feature_names, outdir: Path, tag_prefix: 
             te_idx = rng.choice(len(X_test_t),  size=n_test, replace=False)
             bg_data   = X_train_t[bg_idx]
             test_data = X_test_t[te_idx]
+
+            # (mantém sua lógica de predição; apenas corrigimos forma/plot)
             predict_fn = (model.predict_proba if hasattr(model,"predict_proba") else model.decision_function)
+
             explainer = shap.KernelExplainer(predict_fn, bg_data)
             sv = explainer.shap_values(test_data, nsamples=100)
-            if isinstance(sv, list) and len(sv)==2: sv = sv[1]
+            sv = _coerce_shap_to_2d(sv, n_features=len(feature_names))
+
             X_plot_df = pd.DataFrame(test_data, columns=list(feature_names))
             plot_shap(sv, X_plot_df, suffix="_subset")
 
@@ -841,17 +876,35 @@ def xai_deep_kernel(model, X_train_z, X_test_z, feature_names, outdir: Path, tag
         sv = explainer.shap_values(test_data, nsamples=100)
         if isinstance(sv, list):
             sv = sv[0]
+        sv = np.asarray(sv)
+
         X_plot_df = pd.DataFrame(test_data, columns=list(feature_names))
+        k = min(len(feature_names), MAX_SHAP_FEATURES_PLOT)
 
-        plt.figure(figsize=(7.5,5.5))
-        shap.summary_plot(sv, features=X_plot_df, show=False)
-        plt.savefig(outdir / f"{tag_prefix}_SHAP_beeswarm.png", dpi=160, bbox_inches="tight")
-        plt.close()
+        shap.summary_plot(sv, features=X_plot_df, show=False, max_display=k)
+        ax = plt.gca()
+        lab = ax.get_xlabel() or ""
+        if "interaction" in lab.lower():
+            ax.set_xlabel("SHAP value")
+        ax.xaxis.label.set_clip_on(False)
+        fig = plt.gcf()
+        fig.set_size_inches(11.8, 6.4)
+        fig.subplots_adjust(left=0.42, right=0.98, top=0.98, bottom=0.20)
+        fig.savefig(outdir / f"{tag_prefix}_SHAP_beeswarm.png", dpi=180, bbox_inches="tight", pad_inches=SHAP_PAD_INCHES)
+        plt.close(fig)
 
-        plt.figure(figsize=(7.0,5.0))
-        shap.summary_plot(sv, features=X_plot_df, plot_type="bar", show=False)
-        plt.savefig(outdir / f"{tag_prefix}_SHAP_bar.png", dpi=160, bbox_inches="tight")
-        plt.close()
+        shap.summary_plot(sv, features=X_plot_df, plot_type="bar", show=False, max_display=k)
+        ax = plt.gca()
+        lab = ax.get_xlabel() or ""
+        if "interaction" in lab.lower():
+            ax.set_xlabel("mean(|SHAP value|)")
+        ax.xaxis.label.set_clip_on(False)
+        fig = plt.gcf()
+        fig.set_size_inches(11.8, 6.4)
+        fig.subplots_adjust(left=0.44, right=0.98, top=0.98, bottom=0.20)
+        fig.savefig(outdir / f"{tag_prefix}_SHAP_bar.png", dpi=180, bbox_inches="tight", pad_inches=SHAP_PAD_INCHES)
+        plt.close(fig)
+
     except Exception as e:
         print(f">> Deep (Kernel) SHAP falhou ({tag_prefix}): {e}", flush=True)
 
@@ -896,7 +949,6 @@ def run_full_grid(X_tab, X_seq, y, feature_names, outdir: Path,
 
                 # GridSearch interno (avaliado apenas no treino do fold)
                 grid = GridSearchCV(estimator=pipe, param_grid=param_grid,
-                                    #scoring="recall", cv=5, n_jobs=-1, refit=True, verbose=0)
                                     scoring="f1", cv=5, refit=True, verbose=0)
                 grid.fit(X_train_tab, y_train)
 
@@ -988,8 +1040,6 @@ def run_full_grid(X_tab, X_seq, y, feature_names, outdir: Path,
     print(df_summary, flush=True)
 
     return df_results.sort_values(["feat_mode","scenario","model","variant"])
-
-
 
 # =========================
 # CLI e MAIN
