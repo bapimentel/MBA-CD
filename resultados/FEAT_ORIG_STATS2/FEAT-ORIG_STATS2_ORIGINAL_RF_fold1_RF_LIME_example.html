@@ -37089,25 +37089,25 @@
 /***/ })
 /******/ ]);
 //# sourceMappingURL=bundle.js.map </script></head><body>
-        <div class="lime top_div" id="top_divI4TD6H75TR0WO1X"></div>
+        <div class="lime top_div" id="top_divMZDABQF1YDP5WYL"></div>
         
         <script>
-        var top_div = d3.select('#top_divI4TD6H75TR0WO1X').classed('lime top_div', true);
+        var top_div = d3.select('#top_divMZDABQF1YDP5WYL').classed('lime top_div', true);
         
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
             var pp_svg = pp_div.append('svg').style('width', '100%');
-            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.4879576040122218, 0.5120423959877781]);
+            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.4879576040122218, 0.5120423959877782]);
             
         
         var exp_div;
             var exp = new lime.Explanation(["normal", "evento"]);
         
                 exp_div = top_div.append('div').classed('lime explanation', true);
-                exp.show([["QGL_q3 <= -0.07", 0.027085142238369834], ["T-TPT_last <= -0.54", 0.024483396899356736], ["T-TPT_d1_mean > 0.15", -0.022746915232149806], ["T-JUS-CKP_q2 <= -0.64", 0.022098357816091638], ["P-JUS-CKGL_d1_mean <= -0.03", -0.020869276580768592], ["QGL_q2 <= -0.06", 0.020659186882086185], ["T-TPT_q3 <= -0.54", 0.019339397303657677], ["T-JUS-CKP_q3 <= -0.65", 0.019316994220341714], ["QGL_d1_mean <= 0.03", 0.01485370139063796], ["QGL_d1_std <= -0.06", -0.010737468095895281]], 1, exp_div);
+                exp.show([["T-TPT_d1_mean > 0.15", -0.022208762802418482], ["T-TPT_last <= -0.54", 0.0221364582296733], ["T-JUS-CKP_q3 <= -0.65", 0.02145682198283516], ["T-JUS-CKP_q2 <= -0.64", 0.020991012036016787], ["QGL_var <= -0.05", -0.020976427422490333], ["P-TPT_q2 > 0.64", -0.01999131468677191], ["T-TPT_q3 <= -0.54", 0.019250263638198553], ["T-TPT_q1 <= -0.54", 0.017716215074234695], ["P-TPT_last > 0.64", -0.01709633642827131], ["QGL_d2_mean <= -0.00", -0.009157194461393046]], 1, exp_div);
                 
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["QGL_q3", "-0.07", 0.027085142238369834], ["T-TPT_last", "-0.54", 0.024483396899356736], ["T-TPT_d1_mean", "0.15", -0.022746915232149806], ["T-JUS-CKP_q2", "-0.87", 0.022098357816091638], ["P-JUS-CKGL_d1_mean", "-0.03", -0.020869276580768592], ["QGL_q2", "-0.06", 0.020659186882086185], ["T-TPT_q3", "-0.54", 0.019339397303657677], ["T-JUS-CKP_q3", "-0.87", 0.019316994220341714], ["QGL_d1_mean", "0.03", 0.01485370139063796], ["QGL_d1_std", "-0.06", -0.010737468095895281]], 1, raw_div);
+            exp.show_raw_tabular([["T-TPT_d1_mean", "0.15", -0.022208762802418482], ["T-TPT_last", "-0.54", 0.0221364582296733], ["T-JUS-CKP_q3", "-0.87", 0.02145682198283516], ["T-JUS-CKP_q2", "-0.87", 0.020991012036016787], ["QGL_var", "-0.05", -0.020976427422490333], ["P-TPT_q2", "0.88", -0.01999131468677191], ["T-TPT_q3", "-0.54", 0.019250263638198553], ["T-TPT_q1", "-0.54", 0.017716215074234695], ["P-TPT_last", "0.88", -0.01709633642827131], ["QGL_d2_mean", "-0.00", -0.009157194461393046]], 1, raw_div);
         
         </script>
         </body></html>

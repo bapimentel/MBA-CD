@@ -37089,10 +37089,10 @@
 /***/ })
 /******/ ]);
 //# sourceMappingURL=bundle.js.map </script></head><body>
-        <div class="lime top_div" id="top_div61HFYG0NWWOPULF"></div>
+        <div class="lime top_div" id="top_divFWPML7L3LX8L2ED"></div>
         
         <script>
-        var top_div = d3.select('#top_div61HFYG0NWWOPULF').classed('lime top_div', true);
+        var top_div = d3.select('#top_divFWPML7L3LX8L2ED').classed('lime top_div', true);
         
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
@@ -37104,10 +37104,10 @@
             var exp = new lime.Explanation(["normal", "evento"]);
         
                 exp_div = top_div.append('div').classed('lime explanation', true);
-                exp.show([["T-JUS-CKP_last5_min <= -0.64", 0.023741639558027175], ["QGL_monotonicity <= 0.04", 0.022764048711843607], ["P-TPT_last20_min > 0.64", -0.021818099030819132], ["QGL_last <= -0.06", -0.02006246666348495], ["P-TPT_last > 0.64", -0.019882813211837613], ["P-TPT_last20_max > 0.63", -0.01700624454637834], ["QGL_last20_max <= -0.06", -0.0161466658798356], ["QGL_last20_min <= -0.06", -0.015812037847133382], ["QGL_last5_mean <= -0.06", 0.015660007627287573], ["P-TPT_last20_mean > 0.64", -0.015488145222591634]], 1, exp_div);
+                exp.show([["QGL_last5_std <= -0.04", 0.027312991673918416], ["QGL_monotonicity <= 0.04", -0.023393083648769044], ["P-TPT_last20_min > 0.64", -0.0233714265831979], ["T-JUS-CKP_last5_min <= -0.64", 0.023109131106728128], ["P-TPT_last > 0.64", -0.02240061156762728], ["QGL_last20_max <= -0.06", -0.02237878610838688], ["P-TPT_last20_max > 0.63", -0.02174216972473906], ["T-TPT_monotonicity > 0.66", -0.014662260644954067], ["P-TPT_last20_mean > 0.64", -0.014473691620749489], ["QGL_last20_min <= -0.06", -0.013991041924067494]], 1, exp_div);
                 
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["T-JUS-CKP_last5_min", "-0.86", 0.023741639558027175], ["QGL_monotonicity", "0.04", 0.022764048711843607], ["P-TPT_last20_min", "0.88", -0.021818099030819132], ["QGL_last", "-0.06", -0.02006246666348495], ["P-TPT_last", "0.88", -0.019882813211837613], ["P-TPT_last20_max", "0.88", -0.01700624454637834], ["QGL_last20_max", "-0.06", -0.0161466658798356], ["QGL_last20_min", "-0.06", -0.015812037847133382], ["QGL_last5_mean", "-0.06", 0.015660007627287573], ["P-TPT_last20_mean", "0.88", -0.015488145222591634]], 1, raw_div);
+            exp.show_raw_tabular([["QGL_last5_std", "-0.04", 0.027312991673918416], ["QGL_monotonicity", "0.04", -0.023393083648769044], ["P-TPT_last20_min", "0.88", -0.0233714265831979], ["T-JUS-CKP_last5_min", "-0.86", 0.023109131106728128], ["P-TPT_last", "0.88", -0.02240061156762728], ["QGL_last20_max", "-0.06", -0.02237878610838688], ["P-TPT_last20_max", "0.88", -0.02174216972473906], ["T-TPT_monotonicity", "0.82", -0.014662260644954067], ["P-TPT_last20_mean", "0.88", -0.014473691620749489], ["QGL_last20_min", "-0.06", -0.013991041924067494]], 1, raw_div);
         
         </script>
         </body></html>

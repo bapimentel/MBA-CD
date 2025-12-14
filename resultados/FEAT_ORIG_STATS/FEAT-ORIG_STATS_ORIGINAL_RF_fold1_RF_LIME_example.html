@@ -37089,25 +37089,25 @@
 /***/ })
 /******/ ]);
 //# sourceMappingURL=bundle.js.map </script></head><body>
-        <div class="lime top_div" id="top_div9YG1H1KYXLQN81M"></div>
+        <div class="lime top_div" id="top_divNZWK9Q2FJ44XYTM"></div>
         
         <script>
-        var top_div = d3.select('#top_div9YG1H1KYXLQN81M').classed('lime top_div', true);
+        var top_div = d3.select('#top_divNZWK9Q2FJ44XYTM').classed('lime top_div', true);
         
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
             var pp_svg = pp_div.append('svg').style('width', '100%');
-            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.5196126567438577, 0.48038734325614224]);
+            var pp = new lime.PredictProba(pp_svg, ["normal", "evento"], [0.5196126567438577, 0.4803873432561423]);
             
         
         var exp_div;
             var exp = new lime.Explanation(["normal", "evento"]);
         
                 exp_div = top_div.append('div').classed('lime explanation', true);
-                exp.show([["P-TPT_last > 0.64", -0.036821476218099496], ["P-TPT_min > 0.64", -0.03198263699164485], ["P-TPT_mean > 0.63", -0.027759066208018948], ["T-JUS-CKP_last <= -0.64", 0.026367781887107217], ["T-JUS-CKP_max <= -0.64", 0.025584151804620228], ["T-JUS-CKP_mean <= -0.64", 0.0251276548219292], ["QGL_min <= -0.04", -0.022353859448408564], ["T-TPT_last <= -0.54", 0.019537252770679487], ["T-TPT_min <= -0.54", 0.019181598870805117], ["T-JUS-CKP_min <= -0.64", 0.018986116431910196]], 1, exp_div);
+                exp.show([["P-TPT_last > 0.64", -0.03706063357808761], ["P-TPT_min > 0.64", -0.031791210686075266], ["QGL_min <= -0.04", -0.030546622466388892], ["T-JUS-CKP_mean <= -0.64", 0.027327827369452027], ["T-JUS-CKP_max <= -0.64", 0.027051433670266318], ["P-TPT_mean > 0.63", -0.02480378157283588], ["T-JUS-CKP_last <= -0.64", 0.022372864123272662], ["T-TPT_last <= -0.54", 0.021127573269898548], ["T-JUS-CKP_min <= -0.64", 0.019879201411751327], ["T-TPT_min <= -0.54", 0.018249828171797208]], 1, exp_div);
                 
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["P-TPT_last", "0.88", -0.036821476218099496], ["P-TPT_min", "0.89", -0.03198263699164485], ["P-TPT_mean", "0.88", -0.027759066208018948], ["T-JUS-CKP_last", "-0.87", 0.026367781887107217], ["T-JUS-CKP_max", "-0.88", 0.025584151804620228], ["T-JUS-CKP_mean", "-0.87", 0.0251276548219292], ["QGL_min", "-0.04", -0.022353859448408564], ["T-TPT_last", "-0.54", 0.019537252770679487], ["T-TPT_min", "-0.54", 0.019181598870805117], ["T-JUS-CKP_min", "-0.86", 0.018986116431910196]], 1, raw_div);
+            exp.show_raw_tabular([["P-TPT_last", "0.88", -0.03706063357808761], ["P-TPT_min", "0.89", -0.031791210686075266], ["QGL_min", "-0.04", -0.030546622466388892], ["T-JUS-CKP_mean", "-0.87", 0.027327827369452027], ["T-JUS-CKP_max", "-0.88", 0.027051433670266318], ["P-TPT_mean", "0.88", -0.02480378157283588], ["T-JUS-CKP_last", "-0.87", 0.022372864123272662], ["T-TPT_last", "-0.54", 0.021127573269898548], ["T-JUS-CKP_min", "-0.86", 0.019879201411751327], ["T-TPT_min", "-0.54", 0.018249828171797208]], 1, raw_div);
         
         </script>
         </body></html>
