@@ -1,1 +1,0 @@
-Fidelity (accuracy vs modelo binarizado 0.5): 0.7600
