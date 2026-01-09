@@ -136,15 +136,16 @@ A mesma janela temporal pode ser representada de formas diferentes. No código, 
 | `orig_stats7`       | Complexo        | descritores mais ricos e combinados |
 | `mega_full`         | Integral        | concatenação mais extensa (“full”) |
 
+## 7) Metodologia geral
 <p align="center">
   <img src="assets/slides/slide-13.png" width="820" alt="Pipeline: janelas, modos, modelos e avaliação"/>
 </p>
 
 ---
 
-## 7) Como reproduzir (pipeline completo)
+## 8) Como reproduzir (pipeline completo)
 
-### 7.1 Etapa 1 — Rodar experimentos (`experimentos.py`)
+### 8.1 Etapa 1 — Rodar experimentos (`experimentos.py`)
 Este script:
 1) lê `data/` e cria janelas supervisionadas  
 2) extrai features por modo  
@@ -209,7 +210,7 @@ Colunas:
 
 ---
 
-### 7.2 Etapa 2 — Gerar tabelas LaTeX (`tabelas.py`)
+### 8.2 Etapa 2 — Gerar tabelas LaTeX (`tabelas.py`)
 Lê:
 - `resultados/all_results_grid.tsv`
 - `resultados/FEAT-*_summary.tsv`
@@ -229,7 +230,7 @@ O LaTeX gerado contém:
 
 ---
 
-### 7.3 Etapa 3 — Gerar gráficos (`graficos.py`)
+### 8.3 Etapa 3 — Gerar gráficos (`graficos.py`)
 Lê o TSV consolidado e produz gráficos e TSVs auxiliares em `graficos/`.
 
 ```bash
@@ -250,7 +251,7 @@ Saídas em `graficos/`:
 
 ---
 
-## 8) Resultados (exemplos)
+## 9) Resultados (exemplos)
 
 As figuras abaixo foram exportadas da apresentação do TCC (`Apresentação TCC.pptx`) e ilustram o tipo de análise produzido por este repositório.
 
@@ -280,7 +281,7 @@ De forma geral (como discutido no TCC):
 
 ---
 
-## 9) Como citar este repositório
+## 10) Como citar este repositório
 
 Se este repositório for utilizado como base, cite como material suplementar do TCC (ajuste para ABNT/APA):
 
