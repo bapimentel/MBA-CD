@@ -275,7 +275,7 @@ De forma geral (como discutido no TCC):
 - O desempenho dos modelos depende da forma como a informação dos sensores é representada;
 - Representações que incorporam **variabilidade**, **persistência temporal** e **dinâmica** dos sinais tendem a oferecer vantagens;
 - Os modelos fundamentam suas decisões em sinais **fisicamente coerentes** com o problema:
-	-Variáveis relacionadas à **temperatura** e à **pressão** emergem como centrais;
+	- Variáveis relacionadas à **temperatura** e à **pressão** emergem como centrais;
 - A abordagem proposta demonstra que modelos podem ser utilizados:
 	- Como **ferramentas preditivas**;
 	- Como instrumentos de apoio à **análise e compreensão** do comportamento do sistema.
