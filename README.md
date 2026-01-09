@@ -271,13 +271,14 @@ As figuras abaixo foram exportadas da apresentação do TCC (`Apresentação TCC
 </p>
 
 De forma geral (como discutido no TCC):
-- ensembles baseados em árvores tendem a ser **robustos** em métricas globais (Acurácia/AUC);
-- modelos probabilísticos como **GaussianNB** podem maximizar **Revocação** (sensíveis ao evento), com possível aumento de falsos positivos;
-- modos que capturam **dinâmica**, **estresse** e **picos/persistência** frequentemente trazem ganhos sobre o modo **Instante**.
 
-<p align="center">
-  <img src="assets/slides/slide-21.png" width="820" alt="Conclusões (slide)"/>
-</p>
+- O desempenho dos modelos depende da forma como a informação dos sensores é representada;
+- Representações que incorporam **variabilidade**, **persistência temporal** e **dinâmica** dos sinais tendem a oferecer vantagens;
+- Os modelos fundamentam suas decisões em sinais **fisicamente coerentes** com o problema:
+--Variáveis relacionadas à **temperatura** e à **pressão** emergem como centrais;
+-A abordagem proposta demonstra que modelos podem ser utilizados:
+--Como **ferramentas preditivas**;
+--Como instrumentos de apoio à **análise e compreensão** do comportamento do sistema.
 
 ---
 
